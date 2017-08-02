@@ -6,9 +6,11 @@
 <h4 id="服务器环境准备"><a href="#服务器环境准备" class="headerlink" title="服务器环境准备"></a>服务器环境准备</h4><ul>
 <li><p>SSH无密码验证配置</p>
 <ol>
-<li><p>任一台主机(A)执行</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">ssh-keygen</div><div class="line">cat ~/.ssh/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys</div><div class="line">chmod 600 ~/.ssh/authorized_keys</div></pre></td></tr></table></figure>
+<li>任一台主机(A)执行<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">ssh-keygen</div><div class="line">cat ~/.ssh/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys</div><div class="line">chmod 600 ~/.ssh/authorized_keys</div></pre></td></tr></table></figure>
 </li>
+</ol>
+<a id="more"></a>
+<ol>
 <li><p>使用ssh-copy-id命令将公钥传送到远程主机(B)上</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-copy-id root@B</div></pre></td></tr></table></figure>
 <p>这样从A就可以无密码登录B</p>
@@ -56,7 +58,7 @@
 <li>启动hdfs时，报错 Canary 测试无法在目录 /tmp/.cloudera_health_monitoring_canary_files 中创建文件。<br>经过查看日志，发现 Name node is in safe mode.<br>解决方法：sudo -uhdfs hdfs dfsadmin -safemode leave</li>
 </ul>
 <p>参考文档：<br><a href="http://www.jianshu.com/p/57179e03795f" target="_blank" rel="external">http://www.jianshu.com/p/57179e03795f</a><br><a href="http://cmdschool.blog.51cto.com/2420395/1775398" target="_blank" rel="external">http://cmdschool.blog.51cto.com/2420395/1775398</a><br><a href="http://blog.csdn.net/wendingzhulu/article/details/52423580" target="_blank" rel="external">http://blog.csdn.net/wendingzhulu/article/details/52423580</a></p>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/08/01/first-article/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/08/01/first-article/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/08/02/path-B-安装cloudera-cdh/';
 var disqus_title = 'path B 安装cloudera cdh';
 var disqus_url = 'http://digitalshell.xyz/2017/08/02/path-B-安装cloudera-cdh/';
