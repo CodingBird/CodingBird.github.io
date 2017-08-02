@@ -83,13 +83,73 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h4 id="安装Cloudera-Manager-and-CDH的几种方式"><a href="#安装Cloudera-Manager-and-CDH的几种方式" class="headerlink" title="安装Cloudera Manager and CDH的几种方式"></a>安装Cloudera Manager and CDH的几种方式</h4><ul>
+<li>PATH A： 通过Cloudera Manager自动安装 (不适合生产环境)</li>
+<li>PATH B： Installation Using Cloudera Manager Parcels or Packages</li>
+<li>PATH C： Manual Installation Using Cloudera Manager Tarballs</li>
+</ul>
+<h4 id="服务器环境准备"><a href="#服务器环境准备" class="headerlink" title="服务器环境准备"></a>服务器环境准备</h4><ul>
+<li><p>SSH无密码验证配置</p>
+<ol>
+<li><p>任一台主机(A)执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">ssh-keygen</div><div class="line">cat ~/.ssh/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys</div><div class="line">chmod 600 ~/.ssh/authorized_keys</div></pre></td></tr></table></figure>
+</li>
+<li><p>使用ssh-copy-id命令将公钥传送到远程主机(B)上</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-copy-id root@B</div></pre></td></tr></table></figure>
+<p>这样从A就可以无密码登录B</p>
+</li>
+</ol>
+</li>
+<li>关闭selinux</li>
+<li>配置hosts</li>
+<li>配置hostname</li>
+<li>关闭防火墙并设置开机不启动<ol>
+<li>重启后永久性生效：<br>开启：<code>chkconfig iptables on</code><br>关闭：<code>chkconfig iptables off</code></li>
+<li>即时生效，重启后失效：<br>开启：<code>service iptables start</code><br>关闭：<code>service iptables stop</code></li>
+</ol>
+</li>
+<li>优化虚拟内存需求率<ol>
+<li>检查虚拟内存需求率 <code>cat /proc/sys/vm/swappiness</code></li>
+<li>临时修改 <code>sysctl vm.swappiness=10</code></li>
+<li>永久修改 <code>vi /etc/sysctl.conf</code>  <code>vm.swappiness = 10</code></li>
+</ol>
+</li>
+<li>解决透明大页面问题<ol>
+<li>检查 <code>cat /sys/kernel/mm/transparent_hugepage/defrag</code></li>
+<li>临时修改<br><code>echo never &gt; /sys/kernel/mm/transparent_hugepage/defrag</code><br><code>echo never &gt; /sys/kernel/mm/transparent_hugepage/enabled</code></li>
+<li>永久修改 <code>vi /etc/rc.local</code> 加入上述语句</li>
+</ol>
+</li>
+</ul>
+<h4 id="数据库安装配置："><a href="#数据库安装配置：" class="headerlink" title="数据库安装配置："></a>数据库安装配置：</h4><ol>
+<li>安装MySQL数据库</li>
+<li>mysql-connector<br> <code>mkdir -p /usr/share/java/</code><br> <code>cd /usr/share/java/</code><br> <code>wget https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-5.1.41.tar.gz</code><br> <code>tar -zxvf mysql-connector-java-5.1.41.tar.gz</code><br> <code>cp mysql-connector-java-5.1.41/mysql-connector-java-5.1.41-bin.jar /usr/share/java/mysql-connector-java.jar</code></li>
+<li>为Cloudera Manager Server初始化所需的数据库<br> <code>grant all on *.* to &#39;temp&#39;@&#39;%&#39; identified by &#39;temp&#39; with grant option;</code><br> <code>/usr/share/cmf/schema/scm_prepare_database.sh mysql -h 192.168.100.222 -utemp -ptemp --scm-host 192.168.100.222 scm scm scm</code><br> <code>drop user &#39;temp&#39;@&#39;%&#39;;</code><br> <a href="https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_installing_configuring_dbs.html#concept_mff_xjm_hn" target="_blank" rel="external">https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_installing_configuring_dbs.html#concept_mff_xjm_hn</a></li>
+<li>创建hue,hive等其他服务所需的数据和账号 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div></pre></td><td class="code"><pre><div class="line">grant all privileges on *.* to &apos;scm&apos;@&apos;%&apos; identified by &apos;scm&apos; WITH GRANT OPTION;</div><div class="line">GRANT ALL PRIVILEGES ON *.* TO &apos;scm&apos;@&apos;%&apos; IDENTIFIED BY &apos;scm&apos; WITH GRANT OPTION;</div><div class="line">GRANT ALL PRIVILEGES ON *.* TO &apos;scm&apos;@&apos;192.168.100.235&apos; IDENTIFIED BY &apos;scm&apos; WITH GRANT OPTION;</div><div class="line"></div><div class="line">GRANT ALL ON *.* to &apos;root&apos;@&apos;%&apos; identified by &apos;123456&apos; WITH GRANT OPTION;</div><div class="line"></div><div class="line">mkdir -p /usr/share/java/</div><div class="line">wget https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-5.1.41.tar.gz</div><div class="line">tar -zxvf mysql-connector-java-5.1.41.tar.gz</div><div class="line">cp mysql-connector-java-5.1.41/mysql-connector-java-5.1.41.39-bin.jar /usr/share/java/mysql-connector-java.jar</div><div class="line"></div><div class="line"></div><div class="line">/usr/share/cmf/schema/scm_prepare_database.sh mysql -h 192.168.100.222 -utemp -ptemp --scm-host 192.168.100.222 scm scm scm</div><div class="line"></div><div class="line">create database amon DEFAULT CHARACTER SET utf8;</div><div class="line">grant all on amon.* TO &apos;amon&apos;@&apos;%&apos; IDENTIFIED BY &apos;amon_password&apos;;</div><div class="line">grant all privileges on amon.* TO &apos;amon&apos;@&apos;192.168.100.222&apos; IDENTIFIED BY &apos;amon_password&apos;;</div><div class="line"></div><div class="line">create database rman DEFAULT CHARACTER SET utf8;</div><div class="line">grant all on rman.* TO &apos;rman&apos;@&apos;%&apos; IDENTIFIED BY &apos;rman_password&apos;;</div><div class="line"></div><div class="line">create database metastore DEFAULT CHARACTER SET utf8;</div><div class="line">grant all on metastore.* TO &apos;hive&apos;@&apos;%&apos; IDENTIFIED BY &apos;hive_password&apos;;</div><div class="line">grant all on metastore.* TO &apos;hive&apos;@&apos;master.hadoop.dev.8dol.com&apos; IDENTIFIED BY &apos;hive_password&apos;;</div><div class="line"></div><div class="line">create database sentry DEFAULT CHARACTER SET utf8;</div><div class="line">grant all on sentry.* TO &apos;sentry&apos;@&apos;%&apos; IDENTIFIED BY &apos;sentry_password&apos;;</div><div class="line"></div><div class="line">create database nav DEFAULT CHARACTER SET utf8;</div><div class="line">grant all on nav.* TO &apos;nav&apos;@&apos;%&apos; IDENTIFIED BY &apos;nav_password&apos;;</div><div class="line"></div><div class="line">create database navms DEFAULT CHARACTER SET utf8;</div><div class="line">grant all on navms.* TO &apos;navms&apos;@&apos;%&apos; IDENTIFIED BY &apos;navms_password&apos;;</div><div class="line"></div><div class="line">create database oozie;</div><div class="line">grant all privileges on oozie.* to &apos;oozie&apos;@&apos;localhost&apos; identified by &apos;oozie&apos;;</div><div class="line">grant all privileges on oozie.* to &apos;oozie&apos;@&apos;%&apos; identified by &apos;oozie&apos;;</div><div class="line">grant all privileges on oozie.* TO &apos;oozie&apos;@&apos;192.168.100.222&apos; IDENTIFIED BY &apos;oozie&apos;;</div><div class="line"></div><div class="line">create database hue;</div><div class="line">grant all privileges on hue.* to &apos;hue&apos;@&apos;localhost&apos; identified by &apos;hue&apos;;</div><div class="line">grant all privileges on hue.* to &apos;hue&apos;@&apos;%&apos; identified by &apos;hue&apos;;</div><div class="line">grant all privileges on hue.* TO &apos;hue&apos;@&apos;192.168.100.222&apos; IDENTIFIED BY &apos;hue&apos;;</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>参考文档：<br><a href="https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_mysql.html#cmig_topic_5_5_2" target="_blank" rel="external">https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_mysql.html#cmig_topic_5_5_2</a></p>
+<h4 id="手动通过Cloudera-Manager安装CDH（PATH-B）"><a href="#手动通过Cloudera-Manager安装CDH（PATH-B）" class="headerlink" title="手动通过Cloudera Manager安装CDH（PATH B）"></a>手动通过Cloudera Manager安装CDH（PATH B）</h4><ol>
+<li>安装JDK</li>
+<li>安装数据库</li>
+<li>安装启动Cloudera Manager Server</li>
+<li>安装Cloudera Manager Agents（手动或通过Cloudera Manager Installation wizard）</li>
+<li>安装CDH and Managed Service software（手动或通过Cloudera Manager Installation wizard）</li>
+<li>创建、配置、启动CDH and Managed Services<br>参考文档：<br><a href="https://www.cloudera.com/documentation/enterprise/latest/topics/installation_installation.html" target="_blank" rel="external">https://www.cloudera.com/documentation/enterprise/latest/topics/installation_installation.html</a><br><a href="https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_install_path_b.html#cmig_topic_6_6_1" target="_blank" rel="external">https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_install_path_b.html#cmig_topic_6_6_1</a></li>
+</ol>
+<h3 id="错误解决"><a href="#错误解决" class="headerlink" title="错误解决"></a>错误解决</h3><ul>
+<li>启动hdfs时，报错 Canary 测试无法在目录 /tmp/.cloudera_health_monitoring_canary_files 中创建文件。<br>经过查看日志，发现 Name node is in safe mode.<br>解决方法：sudo -uhdfs hdfs dfsadmin -safemode leave</li>
+</ul>
+<p>参考文档：<br><a href="http://www.jianshu.com/p/57179e03795f" target="_blank" rel="external">http://www.jianshu.com/p/57179e03795f</a><br><a href="http://cmdschool.blog.51cto.com/2420395/1775398" target="_blank" rel="external">http://cmdschool.blog.51cto.com/2420395/1775398</a><br><a href="http://blog.csdn.net/wendingzhulu/article/details/52423580" target="_blank" rel="external">http://blog.csdn.net/wendingzhulu/article/details/52423580</a></p>
+
       
     </div>
     <footer class="article-footer">
       <a data-url="http://digitalshell.xyz/2017/08/02/path-B-安装cloudera-cdh/" data-id="cj5uxj68q0002mdgohugkj5qj" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/大数据/">大数据</a></li></ul>
+
     </footer>
   </div>
   
@@ -192,9 +252,23 @@
 
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/大数据/">大数据</a></li></ul>
+    </div>
+  </div>
+
 
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/大数据/" style="font-size: 10px;">大数据</a>
+    </div>
+  </div>
+
   
     
   <div class="widget-wrap">
